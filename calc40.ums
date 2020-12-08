@@ -9,13 +9,14 @@
          r4 := 0
          r0 := 0
          r1 := done_init
-         //.temps r6,r7 // Why am I getting an error without this?
+         .temps r6,r7 // Why am I getting an error without this?
          goto r6
+                
                            
          init_jump:
                 r7 := jumptable 
                 r6 := r7 + r4
-                m[r0][r6] := r0
+                m[r0][r6] := input_error
                 r4 := 1 + r4        
                 r6 := 256            
                 r7 := init_jump            
@@ -24,6 +25,102 @@
                 
          done_init:
 
-         start:       
-                r2 := callstack
-                halt
+                
+                m[r0][jumptable + '0'] := digit
+                m[r0][jumptable + '1'] := digit
+                m[r0][jumptable + '2'] := digit
+                m[r0][jumptable + '3'] := digit
+                m[r0][jumptable + '4'] := digit
+                m[r0][jumptable + '5'] := digit
+                m[r0][jumptable + '6'] := digit
+                m[r0][jumptable + '7'] := digit
+                m[r0][jumptable + '8'] := digit
+                m[r0][jumptable + '9'] := digit
+                m[r0][jumptable + ' '] := waiting
+                
+ .section text
+
+          digit: 
+                        push r1 on stack r2
+                        push r3 on stack r2
+                        push r4 on stack r2
+                        r6 := r1 - 48
+                        push r6 on stack r3
+                        pop r4 off stack r2
+                        pop r3 off stack r2
+                        pop r5 off stack r2
+                        goto entering
+
+          entering_mult:
+                        push r1 on stack r2
+                        push r3 on stack r2
+                        push r4 on stack r2
+
+                        pop r6 off stack r3
+                        r1 := r1 - 48
+                        r7 := r6 * 10
+                        r6 := r7 + r2
+                        push r6 on stack r3
+
+                        pop r4 off stack r2
+                        pop r3 off stack r2
+                        pop r5 off stack r2
+                        goto entering
+
+                        
+
+          entering:
+                        push r1 on stack r2
+                        push r3 on stack r2
+                        push r4 on stack r2
+                        
+                        r1 := input()
+                        r3 := 0
+                        r4 := '0'                        
+                        if ( r1 <s r4) r3 := 1
+                        r4 := '9'
+                        if ( r1 >s r4) r3 := 1
+                        r7 := r3
+                        pop r4 off stack r2
+                        pop r3 off stack r2
+                        pop r5 off stack r2
+
+                        if (r7 == 0) goto entering mult 
+                        goto waiting_with_character   
+                                             
+
+          input_error:
+                        push r1 on stack r2
+                        push r3 on stack r2
+                        push r4 on stack r2
+                        output "unknown charcter"
+                        pop r4 off stack r2
+                        pop r3 off stack r2
+                        pop r5 off stack r2
+                        goto waiting
+
+          waiting:
+                        push r1 on stack r2
+                        push r3 on stack r2
+                        push r4 on stack r2
+                        r1 := input()
+          waiting_with_character:
+                        //test input for EOF
+                        r5 := jumptable + r1
+                        r5 := m[r0][r5]
+                        goto r5
+                        pop r4 off stack r2
+                        pop r3 off stack r2
+                        pop r5 off stack r2
+                        goto r5
+               
+          main:
+                push r1 on stack r2
+                push r3 on stack r2
+                push r4 on stack r2
+                goto waiting linking r1
+                
+                pop r4 off stack r2
+                pop r3 off stack r2
+                pop r5 off stack r2
+                goto r5

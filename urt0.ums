@@ -4,10 +4,13 @@
 .section init
          .temps r6,r7
          .zero r0
+         
 
 .section data
          .space 10000
          callstack:
+         .space 100000
+         valuestack:
 
 
                        
