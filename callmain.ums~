@@ -1,0 +1,5 @@
+.section init
+         .temps r6,r7
+         r0 := 0
+         r2 := callstack
+         r3 := valuestack
