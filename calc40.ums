@@ -1,0 +1,29 @@
+// Filename: calc40.ums
+// Contains calculator related data structures and functions
+
+.section init
+         jumptable:
+         .space 256
+         r3 := jumptable
+         r6 := init_jump
+         r4 := 0
+         r0 := 0
+         r1 := done_init
+         //.temps r6,r7 // Why am I getting an error without this?
+         goto r6
+                           
+         init_jump:
+                r7 := jumptable 
+                r6 := r7 + r4
+                m[r0][r6] := r0
+                r4 := 1 + r4        
+                r6 := 256            
+                r7 := init_jump            
+                if (r4 != r6) goto r7
+                goto r1
+                
+         done_init:
+
+         start:       
+                r2 := callstack
+                halt

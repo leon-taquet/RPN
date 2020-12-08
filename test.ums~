@@ -1,0 +1,29 @@
+.section init
+       .space 100 
+       endstack:
+       .temps r6, r7
+       .zero r0
+
+start:
+        r0 := 0
+        r2 := endstack
+        goto main linking r1
+        halt
+        
+    
+.section text
+
+ main:
+        loadval r3,65
+        push r3 on stack r2
+        loadval r3,66
+        push r3 on stack r2
+        loadval r3,67
+        push r3 on stack r2
+        pop r4 off stack r2
+        output r4
+        pop r4 off stack r2
+        output r4        
+        pop r4 off stack r2;
+        output r4
+        goto r1
