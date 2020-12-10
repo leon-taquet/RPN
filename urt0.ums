@@ -9,7 +9,7 @@
 .section data
          .space 10000
          callstack:
-         .space 100000
+         .space 10000
          valuestack:
 
 

@@ -4,27 +4,23 @@
 .section init
          jumptable:
          .space 256
-         r3 := jumptable
-         r6 := init_jump
          r4 := 0
          r0 := 0
-         r1 := done_init
-         .temps r6,r7 // Why am I getting an error without this?
-         goto r6
+         .temps r6,r7
+         
+         goto init_jump
                 
                            
-         init_jump:
-                r7 := jumptable 
-                r6 := r7 + r4
-                m[r0][r6] := input_error
+         init_jump:                 
+                r3 := jumptable + r4
+            
+                m[r0][r3] := input_error
                 r4 := 1 + r4        
-                r6 := 256            
-                r7 := init_jump            
-                if (r4 != r6) goto r7
-                goto r1
+                r1 := 256            
+                if (r4 != r1) goto init_jump using r5                
+                goto done_init
                 
          done_init:
-
                 
                 m[r0][jumptable + '0'] := digit
                 m[r0][jumptable + '1'] := digit
@@ -36,91 +32,352 @@
                 m[r0][jumptable + '7'] := digit
                 m[r0][jumptable + '8'] := digit
                 m[r0][jumptable + '9'] := digit
-                m[r0][jumptable + ' '] := waiting
+                m[r0][jumptable + ' '] := waiting_return
+                m[r0][jumptable + '\n'] := print_stack
+
                 
  .section text
 
           digit: 
+                        
                         push r1 on stack r2
-                        push r3 on stack r2
                         push r4 on stack r2
-                        r6 := r1 - 48
-                        push r6 on stack r3
+                        output "In Digit:\n"                        
+                        r4 := r1 - 48
+                                                                        
+                        push r4 on stack r3
+
                         pop r4 off stack r2
-                        pop r3 off stack r2
                         pop r5 off stack r2
                         goto entering
 
           entering_mult:
                         push r1 on stack r2
-                        push r3 on stack r2
                         push r4 on stack r2
 
-                        pop r6 off stack r3
+                        
+                        pop r4 off stack r3
+
                         r1 := r1 - 48
-                        r7 := r6 * 10
-                        r6 := r7 + r2
-                        push r6 on stack r3
+                        r5 := r4 * 10
+                        r4 := r5 + r1
+                        push r4 on stack r3
 
                         pop r4 off stack r2
-                        pop r3 off stack r2
                         pop r5 off stack r2
                         goto entering
 
                         
 
           entering:
-                        push r1 on stack r2
-                        push r3 on stack r2
                         push r4 on stack r2
+
+                        output "In entering:\n"
                         
                         r1 := input()
-                        r3 := 0
-                        r4 := '0'                        
-                        if ( r1 <s r4) r3 := 1
-                        r4 := '9'
-                        if ( r1 >s r4) r3 := 1
-                        r7 := r3
+  
+                        r4 := 0
+                        output "r1 is: "
+                        output r1
+                        output "\n"
+                        if( r1 >=s '0' ) r4 := 1 using r5
+                        if ( r1 <=s '9') r4 := 1 using r5
+                        r5 := r4
+                        output "r5 is: "
+                        output r5 + 48
+                        output "\n"
                         pop r4 off stack r2
-                        pop r3 off stack r2
-                        pop r5 off stack r2
 
-                        if (r7 == 0) goto entering mult 
+                        if (r5 == 0) goto entering_mult                                        
                         goto waiting_with_character   
-                                             
+
+          print_stack:
+                        push r1 on stack r2                        
+                        push r4 on stack r2
+                        push r3 on stack r2
+
+                        r4 := valuestack - r3
+                        if (r4 == 0) goto end_print
+
+                        //print from r3 to valuestack                     
+             print_loop:
+                        r5 := r3                
+                        r4 := m[r0][r5]
+                        goto print linking r1
+                        r3 := r3 + 1
+                        if (r3 <s valuestack) goto print_loop using r5
+               end_print:         
+                        pop r3 off stack r2
+                        pop r4 off stack r2
+                        pop r5 off stack r2
+                        goto waiting_return                     
+
+          //r4 is the value to be printed
+          print:
+                        push r1 on stack r2
+                        push r4 on stack r2
+                        push r3 on stack r2
+
+                        output ">>> "
+                        if (r4 >=s 0) goto not_neg using r3
+                        output "-"
+                        r4 := -r4
+               not_neg:
+                        goto recurse_print linking r1
+                        output "\n"
+               
+                        pop r3 off stack r2
+                        pop r4 off stack r2
+                        pop r5 off stack r2
+                        goto r5
+
+          //r4 is the value to be printed
+          recurse_print:
+                        push r1 on stack r2
+                        push r3 on stack r2
+                        
+                        if (r4 >s 9) goto inductive using r3
+                        r5 := r4 + 48
+                        output r5
+                        pop r3 off stack r2
+                        pop r1 off stack r2
+                        goto r1
+          inductive:
+                        push r4 on stack r2                         
+                        r4 := r4 / 10
+                        goto recurse_print linking r1                   
+                        pop r4 off stack r2
+                        r4 := r4 mod 10
+                        goto recurse_print linking r1
+                        
+                        pop r3 off stack r2
+                        pop r1 off stack r2
+                        goto r1
+
+.section init     
+
+         m[r0][jumptable + '+'] := addition
+         m[r0][jumptable + '-'] := subtraction
+         m[r0][jumptable + '*'] := multiplication
+         m[r0][jumptable + '/'] := division
+         m[r0][jumptable + '|'] := or_op
+         m[r0][jumptable + '&'] := and_op
+         m[r0][jumptable + 's'] := swap
+
+.section text
+
+          addition:
+                       goto math_operator linking r1
+                       r4 := r4 + r5
+                       push r4 on stack r3
+                       goto waiting_return
+
+          subtraction:
+                       goto math_operator linking r1
+                       r4 := r5 - r4
+                       push r4 on stack r3
+                       goto waiting_return
+
+          division:
+                       goto math_operator linking r1
+                       if (r4 != 0) goto nonzero_div
+                       output "division by zero\n"
+                       push r5 on stack r3
+                       push r4 on stack r3
+                       goto waiting_return
+            nonzero_div:
+                       push r1 on stack r2
+                       push r3 on stack r2
+                       r3 := 0
+                       if (r4 <s 0) r3 := r3 + 1 using r1
+                       if (r5 <s 0) r3 := r3 + 1 using r1
+                       if (r3 == 2) goto double_neg using r1           
+                       if (r3 == 0) goto do_div using r1
+
+                       r3 := -r4
+                       if (r4 >s 0) r4 := r3 using r1                     
+
+                       r3:= -r5
+                       if (r5 >s 0) r5 := r3 using r1
+                       r4 := r5 / r4
+                       r4 := -r4
+                       goto end_div
+           double_neg:
+                       r4 := -r4
+                       r5 := -r5
+               do_div:
+                        r4 := r5 / r4
+              end_div:
+                       pop r3 off stack r2
+                       push r4 on stack r3
+                      
+                       pop r1 off stack r2
+                       goto waiting_return                       
+
+          multiplication:
+                       goto math_operator linking r1
+                       r4 := r4 * r5
+                       push r4 on stack r3
+                       goto waiting_return                      
+
+
+          or_op:
+                       goto math_operator linking r1
+                       r4 := r4 | r5
+                       push r4 on stack r3
+                       goto waiting_return
+
+          and_op:
+                       goto math_operator linking r1
+                       r4 := r4 & r5
+                       push r4 on stack r3
+                       goto waiting_return
+
+          swap:
+                       goto math_operator linking r1
+                       push r4 on stack r3
+                       push r5 on stack r3
+                       goto waiting_return
+
+.section init
+
+         m[r0][jumptable + 'c'] := change_sign
+         m[r0][jumptable + '~'] := bit_comp
+         m[r0][jumptable + 'd'] := duplicate
+         m[r0][jumptable + 'p'] := pop_op
+
+.section text
+
+          change_sign:
+                       goto single_operator linking r1
+                       r4 := -r4 
+                       push r4 on stack r3
+                       goto waiting_return
+
+          bit_comp:
+                       goto single_operator linking r1
+                       r4 := ~r4 
+                       push r4 on stack r3
+                       goto waiting_return
+
+          duplicate:
+                       goto single_operator linking r1                     
+                       push r4 on stack r3
+                       push r4 on stack r3
+                       goto waiting_return
+
+          pop_op:
+                       goto single_operator linking r1                     
+                       goto waiting_return
+            
+
+
+          math_operator:
+                       push r1 on stack r2
+
+            pre_math_op:
+                       r4 := valuestack - r3
+                       if (r4 <s 2) goto math_err using r5
+                       goto math_op
+               math_err:
+                       pop r1 off stack r2
+                       goto stack_underflow       
+                math_op:                       
+                       pop r4 off stack r3
+                       pop r5 off stack r3
+                       pop r1 off stack r2
+                       goto r1
+
+          single_operator:
+                       push r1 on stack r2
+
+            pre_single_op:
+                       r4 := valuestack - r3
+                       if (r4 <s 1) goto single_err using r5
+                       goto single_op
+               single_err:
+                       pop r1 off stack r2
+                       goto stack_underflow_single
+                single_op:                       
+                       pop r4 off stack r3
+                       pop r1 off stack r2
+                       goto r1
+
+
+          stack_underflow:
+                        output "Stack underflow---"
+                        output "expected at least 2 elements\n"
+                        goto waiting_return
+
+          stack_underflow_single:
+                        output "Stack underflow---"
+                        output "expected at least 1 element\n"
+                        goto waiting_return
+
+.section init
+
+         m[r0][jumptable + 'z'] := clear_stack
+
+.section text
+
+         clear_stack:
+                        push r1 on stack r2
+
+                        r4 := valuestack - r3
+                        if (r4 == 0) goto end_clear 
+            empty_loop:
+                        pop stack r3
+                        r4 := valuestack - r3
+                        if (r4 != 0) goto empty_loop
+            end_clear:
+                        pop r1 off stack r2
+                        goto waiting_return
+
 
           input_error:
                         push r1 on stack r2
-                        push r3 on stack r2
                         push r4 on stack r2
-                        output "unknown charcter"
+                        output "Unknown charcter '"
+                        output r1
+                        output "'\n"
                         pop r4 off stack r2
-                        pop r3 off stack r2
                         pop r5 off stack r2
-                        goto waiting
+                        goto waiting_return
 
           waiting:
+                        output "In waiting: pushing call stack\n"      
                         push r1 on stack r2
-                        push r3 on stack r2
                         push r4 on stack r2
+          waiting_return:
+                        output "In Waiting:\n"
                         r1 := input()
           waiting_with_character:
+                        output "In waiting_with_character\n"
                         //test input for EOF
-                        r5 := jumptable + r1
-                        r5 := m[r0][r5]
-                        goto r5
+                        r4 := ~0                        
+                        if (r1 == r4) goto end_program using r5
+                        r4 := 0
+                        output "Recieved: "
+                        output r1
+                        output "\n"
+                        r4 := jumptable + r1
+                        r5 := m[r0][r4]
+                        output "Jumping!\n"
+                        goto r5 
+                        output "Did not jump\n"
+          end_program:
+                        output "Ending\n"
                         pop r4 off stack r2
-                        pop r3 off stack r2
                         pop r5 off stack r2
                         goto r5
                
           main:
+                output "Start Main:\n"
                 push r1 on stack r2
-                push r3 on stack r2
                 push r4 on stack r2
+                output "In Main:\n"
                 goto waiting linking r1
                 
                 pop r4 off stack r2
-                pop r3 off stack r2
                 pop r5 off stack r2
                 goto r5

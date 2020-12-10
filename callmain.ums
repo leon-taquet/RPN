@@ -4,4 +4,5 @@
          r2 := callstack
          r3 := valuestack
          goto main linking r1
+         r1 := 0
          halt
