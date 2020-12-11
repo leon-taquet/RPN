@@ -42,7 +42,7 @@
                         
                         push r1 on stack r2
                         push r4 on stack r2
-                        output "In Digit:\n"                        
+
                         r4 := r1 - 48
                                                                         
                         push r4 on stack r3
@@ -71,24 +71,17 @@
 
           entering:
                         push r4 on stack r2
-
-                        output "In entering:\n"
                         
                         r1 := input()
   
                         r4 := 0
-                        output "r1 is: "
-                        output r1
-                        output "\n"
                         if( r1 >=s '0' ) r4 := 1 using r5
                         if ( r1 <=s '9') r4 := 1 using r5
                         r5 := r4
-                        output "r5 is: "
-                        output r5 + 48
-                        output "\n"
                         pop r4 off stack r2
 
-                        if (r5 == 0) goto entering_mult                                        
+                        if (r5 == 0) goto entering_mult                    
+
                         goto waiting_with_character   
 
           print_stack:
@@ -181,7 +174,7 @@
           division:
                        goto math_operator linking r1
                        if (r4 != 0) goto nonzero_div
-                       output "division by zero\n"
+                       output "Division by zero\n"
                        push r5 on stack r3
                        push r4 on stack r3
                        goto waiting_return
@@ -189,8 +182,8 @@
                        push r1 on stack r2
                        push r3 on stack r2
                        r3 := 0
-                       if (r4 <s 0) r3 := r3 + 1 using r1
-                       if (r5 <s 0) r3 := r3 + 1 using r1
+                       if (r4 >s 0) r3 := r3 + 1 using r1
+                       if (r5 >s 0) r3 := r3 + 1 using r1
                        if (r3 == 2) goto double_neg using r1           
                        if (r3 == 0) goto do_div using r1
 
@@ -345,37 +338,31 @@
                         goto waiting_return
 
           waiting:
-                        output "In waiting: pushing call stack\n"      
+
                         push r1 on stack r2
                         push r4 on stack r2
           waiting_return:
-                        output "In Waiting:\n"
+
                         r1 := input()
           waiting_with_character:
-                        output "In waiting_with_character\n"
+
                         //test input for EOF
                         r4 := ~0                        
                         if (r1 == r4) goto end_program using r5
                         r4 := 0
-                        output "Recieved: "
-                        output r1
-                        output "\n"
+
                         r4 := jumptable + r1
                         r5 := m[r0][r4]
-                        output "Jumping!\n"
                         goto r5 
-                        output "Did not jump\n"
           end_program:
-                        output "Ending\n"
                         pop r4 off stack r2
                         pop r5 off stack r2
                         goto r5
                
           main:
-                output "Start Main:\n"
                 push r1 on stack r2
                 push r4 on stack r2
-                output "In Main:\n"
+
                 goto waiting linking r1
                 
                 pop r4 off stack r2
